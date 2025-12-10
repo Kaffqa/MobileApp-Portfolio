@@ -6,25 +6,38 @@ import {
   View, 
   Image, 
   Animated, 
-  Linking 
+  Linking, 
+  ScrollView,
+  Dimensions
 } from "react-native";
 import { useEffect, useRef } from "react";
-import { Ionicons } from "@expo/vector-icons"; // Icon bawaan Expo
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons"; 
+import * as Haptics from 'expo-haptics'; // Optional: Jika sudah install expo-haptics
 import GridBackground from "../components/GridBackground";
 import { COLORS } from "../constants/colors";
+
+const { width } = Dimensions.get('window');
+
+// Data Dummy untuk UI
+const SKILLS = ["React Native", "TypeScript", "Next.js", "Node.js", "UI/UX Design", "Figma", "MongoDB"];
+const STATS = [
+  { label: "Projects", value: "12+" },
+  { label: "Experience", value: "2 Yr" },
+  { label: "Clients", value: "5+" },
+];
 
 export default function Home() {
   const router = useRouter();
   
-  // Animasi Values
+  // Animation Refs
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 1000,
+        duration: 800,
         useNativeDriver: true,
       }),
       Animated.spring(slideAnim, {
@@ -35,145 +48,239 @@ export default function Home() {
     ]).start();
   }, []);
 
-  // Fungsi helper untuk membuka link sosial
+  const handlePress = (route: string) => {
+    // Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); // Uncomment jika pakai haptics
+    router.push(route as any);
+  };
+
   const openLink = (url: string) => Linking.openURL(url);
 
   return (
     <GridBackground>
-      <View style={styles.container}>
-        
-        {/* Bagian Konten Utama dengan Animasi */}
+      {/* Menggunakan ScrollView agar konten tidak terpotong di layar kecil */}
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <Animated.View 
           style={[
-            styles.contentContainer, 
+            styles.mainContent, 
             { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
           ]}
         >
-          {/* Avatar / Foto Profil */}
-          <View style={styles.avatarContainer}>
+          {/* --- 1. HEADER PROFILE --- */}
+          <View style={styles.headerRow}>
              <Image 
-               source={{ uri: "https://github.com/shadcn.png" }} // Ganti dengan URL foto Anda
+               source={{ uri: "https://github.com/shadcn.png" }} 
                style={styles.avatar}
              />
-             <View style={styles.statusBadge} />
+             <View>
+                <Text style={styles.greeting}>Hello, I'm Kaffqa 👋</Text>
+                <View style={styles.statusBadge}>
+                    <View style={styles.statusDot} />
+                    <Text style={styles.statusText}>Available for work</Text>
+                </View>
+             </View>
           </View>
 
-          <Text style={styles.greeting}>Hello, I'm Kaffqa 👋</Text>
-          <Text style={styles.title}>Creative Tech{"\n"}Portfolio.</Text>
+          <Text style={styles.title}>Building Digital{"\n"}Experiences.</Text>
           <Text style={styles.subtitle}>
-            Mobile Developer | UI Engineer | Tech Enthusiast
+            fullstack Developer | Mobile App Enthusiast  | Ai Explorer
           </Text>
 
-          {/* Action Buttons */}
+          {/* --- 2. NEW: QUICK STATS --- */}
+          <View style={styles.statsContainer}>
+            {STATS.map((stat, index) => (
+              <View key={index} style={styles.statItem}>
+                <Text style={styles.statValue}>{stat.value}</Text>
+                <Text style={styles.statLabel}>{stat.label}</Text>
+              </View>
+            ))}
+          </View>
+
+          {/* --- 3. NEW: HORIZONTAL SKILLS SCROLL --- */}
+          <View style={styles.skillsSection}>
+            <Text style={styles.sectionLabel}>CURRENT STACK</Text>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingRight: 20 }}
+            >
+              {SKILLS.map((skill, index) => (
+                <View key={index} style={styles.skillChip}>
+                  <Text style={styles.skillText}>{skill}</Text>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+
+          {/* --- 4. ACTION BUTTONS --- */}
           <View style={styles.buttonGroup}>
-            {/* Primary Button */}
             <Pressable
-              style={({ pressed }) => [
-                styles.button, 
-                styles.buttonPrimary,
-                pressed && styles.buttonPressed
-              ]}
-              onPress={() => router.push("/Projects" as any)}
+              style={({ pressed }) => [styles.button, styles.buttonPrimary, pressed && styles.pressed]}
+              onPress={() => handlePress("/Projects")}
             >
               <Text style={styles.btnTextPrimary}>View Projects</Text>
               <Ionicons name="arrow-forward" size={20} color="#000" />
             </Pressable>
 
-            {/* Secondary Button (Outline) */}
             <Pressable
-              style={({ pressed }) => [
-                styles.button, 
-                styles.buttonOutline,
-                pressed && styles.buttonPressed
-              ]}
-              onPress={() => router.push("/contact" as any)}
+              style={({ pressed }) => [styles.button, styles.buttonOutline, pressed && styles.pressed]}
+              onPress={() => handlePress("/contact")}
             >
               <Text style={styles.btnTextSecondary}>Contact Me</Text>
             </Pressable>
           </View>
-        </Animated.View>
 
-        {/* Footer Social Links */}
-        <Animated.View style={[styles.socialContainer, { opacity: fadeAnim }]}>
-          <Pressable onPress={() => openLink("https://github.com")}>
-            <Ionicons name="logo-github" size={24} color={COLORS.textSecondary} />
-          </Pressable>
-          <Pressable onPress={() => openLink("https://linkedin.com")}>
-            <Ionicons name="logo-linkedin" size={24} color={COLORS.textSecondary} />
-          </Pressable>
-          <Pressable onPress={() => openLink("mailto:email@example.com")}>
-            <Ionicons name="mail" size={24} color={COLORS.textSecondary} />
-          </Pressable>
-        </Animated.View>
+          {/* --- 5. SOCIAL LINKS --- */}
+          <View style={styles.socialRow}>
+             <Pressable onPress={() => openLink("https://github.com")}>
+                <Ionicons name="logo-github" size={24} color={COLORS.textSecondary} />
+             </Pressable>
+             <Pressable onPress={() => openLink("https://linkedin.com")}>
+                <Ionicons name="logo-linkedin" size={24} color={COLORS.textSecondary} />
+             </Pressable>
+             <Pressable onPress={() => openLink("https://instagram.com")}>
+                <Ionicons name="logo-instagram" size={24} color={COLORS.textSecondary} />
+             </Pressable>
+          </View>
 
-      </View>
+        </Animated.View>
+      </ScrollView>
+
+      {/* --- 6. NEW: FLOATING ACTION BUTTON (FAB) --- */}
+      {/* Tombol melayang untuk Download CV */}
+      <Pressable 
+        style={({ pressed }) => [styles.fab, pressed && styles.pressed]}
+        onPress={() => alert("Download Resume Logic Here")}
+      >
+        <MaterialCommunityIcons name="file-download-outline" size={26} color="#000" />
+      </Pressable>
+
     </GridBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "space-between", // Memisahkan konten utama dan footer
+  scrollContent: {
+    flexGrow: 1,
     padding: 24,
-    paddingTop: 80,
-    paddingBottom: 40,
+    paddingTop: 60,
+    paddingBottom: 100, // Space for FAB
   },
-  contentContainer: {
-    alignItems: 'flex-start',
+  mainContent: {
+    flex: 1,
   },
-  // Avatar Styles
-  avatarContainer: {
+  // Header Profile
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
     marginBottom: 24,
-    position: 'relative',
   },
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     borderWidth: 2,
     borderColor: COLORS.accent,
   },
-  statusBadge: {
-    position: 'absolute',
-    bottom: 2,
-    right: 2,
-    width: 16,
-    height: 16,
-    backgroundColor: '#10B981', // Green for "Available for work"
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: '#000', // Sesuaikan dengan background color app Anda
-  },
-  // Typography
   greeting: {
-    color: COLORS.accent,
-    fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 8,
-    letterSpacing: 0.5,
+    color: COLORS.textPrimary,
+    fontSize: 18,
+    fontWeight: "700",
   },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10B981',
+    marginRight: 6,
+  },
+  statusText: {
+    color: '#10B981',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  // Titles
   title: {
     color: COLORS.textPrimary,
-    fontSize: 42,
+    fontSize: 36,
     fontWeight: "800",
-    lineHeight: 48,
+    lineHeight: 42,
     marginBottom: 12,
   },
   subtitle: {
     color: COLORS.textSecondary,
     fontSize: 16,
     lineHeight: 24,
-    marginBottom: 40,
-    maxWidth: '90%',
+    marginBottom: 32,
+  },
+  // Stats
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 32,
+    borderWidth: 1,
+    borderColor: COLORS.cardBorder,
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statValue: {
+    color: COLORS.accent,
+    fontSize: 24,
+    fontWeight: "800",
+  },
+  statLabel: {
+    color: COLORS.textSecondary,
+    fontSize: 12,
+    marginTop: 4,
+  },
+  // Skills
+  skillsSection: {
+    marginBottom: 32,
+  },
+  sectionLabel: {
+    color: COLORS.textSecondary,
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 1,
+    marginBottom: 12,
+  },
+  skillChip: {
+    backgroundColor: COLORS.surface,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 30,
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: COLORS.cardBorder,
+  },
+  skillText: {
+    color: COLORS.textPrimary,
+    fontSize: 14,
+    fontWeight: "500",
   },
   // Buttons
   buttonGroup: {
-    width: '100%',
-    gap: 16, // Jarak antar button
+    gap: 16,
+    marginBottom: 40,
   },
   button: {
-    paddingVertical: 16,
+    paddingVertical: 18,
     borderRadius: 16,
     flexDirection: 'row',
     alignItems: "center",
@@ -185,16 +292,14 @@ const styles = StyleSheet.create({
     shadowColor: COLORS.accent,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowRadius: 10,
   },
   buttonOutline: {
-    backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: COLORS.textSecondary,
   },
-  buttonPressed: {
-    opacity: 0.8,
+  pressed: {
+    opacity: 0.9,
     transform: [{ scale: 0.98 }]
   },
   btnTextPrimary: {
@@ -207,13 +312,28 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 16,
   },
-  // Footer
-  socialContainer: {
+  // Social
+  socialRow: {
     flexDirection: 'row',
+    gap: 24,
+    marginTop: 10,
+  },
+  // FAB
+  fab: {
+    position: 'absolute',
+    bottom: 30,
+    right: 24,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: COLORS.accent,
+    alignItems: 'center',
     justifyContent: 'center',
-    gap: 32,
-    paddingTop: 20,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.1)',
+    shadowColor: COLORS.accent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 6,
+    zIndex: 100,
   },
 });
