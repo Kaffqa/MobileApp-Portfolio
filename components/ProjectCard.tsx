@@ -14,57 +14,72 @@ export default function ProjectCard({ item }: any) {
         { transform: [{ scale: pressed ? 0.98 : 1 }] },
       ]}
     >
-      <View style={styles.accent} />
+      {/* Thumbnail Image */}
       <Image source={{ uri: item.thumbnail }} style={styles.thumbnail} />
-      <Text style={styles.title}>{item.title}</Text>
-      <Text style={styles.desc}>{item.subtitle}</Text>
+      
+      {/* Content */}
+      <View style={styles.content}>
+        <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
+        <Text style={styles.subtitle} numberOfLines={1}>{item.subtitle}</Text>
+        
+        {/* Render First 2 Tags only to keep it clean */}
+        <View style={styles.tagContainer}>
+          {item.tags.slice(0, 2).map((tag: string, index: number) => (
+            <View key={index} style={styles.tagBadge}>
+              <Text style={styles.tagText}>{tag}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
+    flex: 1,
     backgroundColor: COLORS.surface,
-    borderRadius: 12,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: COLORS.cardBorder,
-    padding: 12,
     overflow: "hidden",
-    position: "relative",
-    minWidth: 150,
-  },
-  accent: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 4,
-    backgroundColor: COLORS.accent,
-    opacity: 0.95,
-    borderTopLeftRadius: 12,
-    borderBottomLeftRadius: 12,
-    shadowColor: COLORS.accent,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 8,
+    marginBottom: 4, // spacing adjustment
   },
   thumbnail: {
     width: "100%",
-    height: 120,
-    borderRadius: 8,
-    marginBottom: 10,
-    marginLeft: 6,
+    height: 140,
+    backgroundColor: "#222",
+  },
+  content: {
+    padding: 12,
   },
   title: {
     color: COLORS.textPrimary,
     fontSize: 16,
-    fontWeight: "600",
-    marginLeft: 6,
+    fontWeight: "700",
+    marginBottom: 4,
   },
-  desc: {
+  subtitle: {
     color: COLORS.textSecondary,
-    marginTop: 2,
-    fontSize: 13,
-    marginLeft: 6,
+    fontSize: 12,
+    marginBottom: 12,
   },
+  tagContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  tagBadge: {
+    backgroundColor: 'rgba(0, 229, 255, 0.1)', // Transparan Accent
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.2)',
+  },
+  tagText: {
+    color: COLORS.accent,
+    fontSize: 10,
+    fontWeight: "600",
+  }
 });
