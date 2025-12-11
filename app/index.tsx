@@ -132,6 +132,38 @@ export default function Home() {
             </Pressable>
           </View>
 
+          <View style={styles.buttonGroup}>
+    {/* Row untuk tombol utama */}
+    <View style={{ flexDirection: 'row', gap: 12 }}>
+        <Pressable
+            style={[styles.button, styles.buttonPrimary, { flex: 1 }]}
+            onPress={() => router.push("/Projects" as any)}
+        >
+            <Text style={styles.btnTextPrimary}>Projects</Text>
+        </Pressable>
+
+        <Pressable
+            style={[styles.button, styles.buttonOutline, { flex: 1 }]}
+            onPress={() => router.push("/contact" as any)}
+        >
+            <Text style={styles.btnTextSecondary}>Contact</Text>
+        </Pressable>
+    </View>
+
+    {/* Tombol Journey Full Width */}
+    <Pressable
+        style={({ pressed }) => [
+            styles.button, 
+            { backgroundColor: 'rgba(255,255,255,0.05)', marginTop: -4 }, // Sedikit transparan
+            pressed && styles.pressed
+        ]}
+        onPress={() => router.push("/journey" as any)}
+    >
+        <Ionicons name="time-outline" size={20} color={COLORS.textPrimary} />
+        <Text style={styles.btnTextSecondary}>View My Journey</Text>
+    </Pressable>
+</View>
+
           {/* --- 5. SOCIAL LINKS --- */}
           <View style={styles.socialRow}>
              <Pressable onPress={() => openLink("https://github.com")}>
