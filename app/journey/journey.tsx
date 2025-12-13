@@ -1,62 +1,105 @@
-import React from "react";
-import { StyleSheet, Text, View, ScrollView } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { StyleSheet, Text, View, ScrollView, Animated, Dimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter, Stack } from "expo-router";
+import { Stack } from "expo-router";
 import GridBackground from "../../components/GridBackground";
 import { COLORS } from "../../constants/colors";
 import { JOURNEY_DATA } from "../../constants/journey";
 
-export default function Journey() {
-  const router = useRouter();
+const { width } = Dimensions.get("window");
+
+// --- 1. Sub-Component Terpisah & Memoized (Optimasi Render) ---
+const JourneyItem = React.memo(({ item, index, isLast }: any) => {
+  // Animasi Slide Up & Fade In
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        delay: index * 150, // Stagger effect (muncul berurutan)
+        useNativeDriver: true,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        friction: 7,
+        tension: 40,
+        delay: index * 150,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   return (
+    <Animated.View style={[styles.itemContainer, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+      {/* Bagian Kiri: Garis & Icon */}
+      <View style={styles.leftColumn}>
+        <View style={styles.iconBubble}>
+          <Ionicons name={item.icon} size={18} color="#000" />
+        </View>
+        {/* Garis hanya muncul jika BUKAN item terakhir */}
+        {!isLast && <View style={styles.lineConnector} />}
+      </View>
+
+      {/* Bagian Kanan: Card Content */}
+      <View style={styles.cardWrapper}>
+        <View style={styles.card}>
+          {/* Header Card: Year & Type */}
+          <View style={styles.cardHeader}>
+            <View style={styles.yearBadge}>
+              <Ionicons name="calendar-outline" size={12} color={COLORS.accent} style={{ marginRight: 4 }} />
+              <Text style={styles.yearText}>{item.year}</Text>
+            </View>
+            <View style={styles.typeBadge}>
+              <Text style={styles.typeText}>{item.type}</Text>
+            </View>
+          </View>
+
+          <Text style={styles.title}>{item.title}</Text>
+          <Text style={styles.company}>{item.company}</Text>
+          
+          <View style={styles.divider} />
+          
+          <Text style={styles.description}>{item.description}</Text>
+        </View>
+      </View>
+    </Animated.View>
+  );
+});
+
+// --- 2. Component Utama ---
+export default function Journey() {
+  return (
     <GridBackground>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
-          headerTitle: "My Journey",
+          headerTitle: "", // Kosongkan title default agar header custom di bawah lebih fokus
+          headerTransparent: true,
           headerTintColor: COLORS.textPrimary,
-          headerStyle: { backgroundColor: COLORS.background },
-          headerShadowVisible: false, // Menghilangkan garis default header
-        }} 
+          headerShadowVisible: false,
+        }}
       />
 
-      <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.header}>
-            <Text style={styles.headerTitle}>Career Path</Text>
-            <Text style={styles.headerSubtitle}>Education, Work & Milestones</Text>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.pageHeader}>
+          <Text style={styles.headerTitle}>Career Path 🚀</Text>
+          <Text style={styles.headerSubtitle}>My professional timeline & milestones.</Text>
         </View>
 
-        <View style={styles.timelineContainer}>
-          {/* Garis Vertikal Panjang */}
-          <View style={styles.verticalLine} />
-
-          {JOURNEY_DATA.map((item, index) => {
-            const isLast = index === JOURNEY_DATA.length - 1;
-            
-            return (
-              <View key={item.id} style={styles.timelineItem}>
-                
-                {/* Bagian Kiri: Marker & Icon */}
-                <View style={styles.leftSide}>
-                  <View style={styles.iconBubble}>
-                     <Ionicons name={item.icon as any} size={18} color="#000" />
-                  </View>
-                </View>
-
-                {/* Bagian Kanan: Content Card */}
-                <View style={[styles.card, isLast && styles.lastCard]}>
-                  <View style={styles.cardHeader}>
-                    <Text style={styles.yearBadge}>{item.year}</Text>
-                    <Text style={styles.typeText}>{item.type.toUpperCase()}</Text>
-                  </View>
-                  
-                  <Text style={styles.itemTitle}>{item.title}</Text>
-                  <Text style={styles.itemCompany}>{item.company}</Text>
-                  <Text style={styles.itemDesc}>{item.description}</Text>
-                </View>
-              </View>
-            );
-          })}
+        <View style={styles.timelineList}>
+          {JOURNEY_DATA.map((item, index) => (
+            <JourneyItem 
+              key={item.id || index} 
+              item={item} 
+              index={index} 
+              isLast={index === JOURNEY_DATA.length - 1} 
+            />
+          ))}
         </View>
       </ScrollView>
     </GridBackground>
@@ -64,100 +107,134 @@ export default function Journey() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  scrollContent: {
     padding: 24,
-    paddingBottom: 40,
+    paddingTop: 100, // Kompensasi headerTransparent
+    paddingBottom: 50,
   },
-  header: {
-    marginBottom: 32,
+  // Header Style
+  pageHeader: {
+    marginBottom: 40,
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: "800",
     color: COLORS.textPrimary,
+    letterSpacing: -0.5,
   },
   headerSubtitle: {
     fontSize: 16,
     color: COLORS.textSecondary,
-    marginTop: 4,
+    marginTop: 6,
+    lineHeight: 22,
   },
-  timelineContainer: {
-    position: 'relative',
+  
+  // Timeline Logic
+  timelineList: {
+    paddingLeft: 8, // Sedikit indent agar icon tidak terlalu mepet kiri layar
   },
-  // Garis Neon Vertikal
-  verticalLine: {
-    position: 'absolute',
-    left: 19, // Posisi garis agar pas di tengah icon
-    top: 20,
-    bottom: 0,
-    width: 2,
-    backgroundColor: 'rgba(0, 229, 255, 0.2)', // Warna Accent transparan
-    borderRadius: 1,
-  },
-  timelineItem: {
+  itemContainer: {
     flexDirection: 'row',
-    marginBottom: 32, // Jarak antar item
+    marginBottom: 4, // Jarak antar row (dikontrol oleh minHeight garis)
   },
-  leftSide: {
-    marginRight: 16,
+  leftColumn: {
     alignItems: 'center',
-    zIndex: 1, // Agar icon berada di atas garis
+    marginRight: 16,
+    width: 40, 
   },
+  
+  // Icon & Garis Neon
   iconBubble: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: COLORS.accent,
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 10,
+    borderWidth: 3,
+    borderColor: '#111', // Memberi efek border agar terpisah dari garis
     shadowColor: COLORS.accent,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
+    shadowOpacity: 0.5,
     shadowRadius: 8,
-    elevation: 5,
+  },
+  lineConnector: {
+    flex: 1, // Mengisi sisa ruang ke bawah
+    width: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginVertical: -2, // Hack agar garis nyambung sempurna ke bubble berikutnya
+    minHeight: 40, // Pastikan ada jarak minimal antar item
+  },
+
+  // Card Styling
+  cardWrapper: {
+    flex: 1,
+    paddingBottom: 32, // Memberi jarak visual antar card content
   },
   card: {
-    flex: 1,
     backgroundColor: 'rgba(255,255,255,0.03)',
-    borderWidth: 1,
-    borderColor: COLORS.cardBorder,
     borderRadius: 16,
-    padding: 16,
-  },
-  lastCard: {
-    marginBottom: 0,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    alignItems: 'center',
+    marginBottom: 12,
   },
+  
+  // Badges
   yearBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 229, 255, 0.1)', // Warna accent transparan
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  yearText: {
     color: COLORS.accent,
     fontWeight: "700",
-    fontSize: 14,
+    fontSize: 12,
+  },
+  typeBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   typeText: {
     color: COLORS.textSecondary,
     fontSize: 10,
     fontWeight: "600",
-    letterSpacing: 1,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
-  itemTitle: {
+
+  // Text Content
+  title: {
     color: COLORS.textPrimary,
     fontSize: 18,
     fontWeight: "700",
     marginBottom: 4,
   },
-  itemCompany: {
-    color: COLORS.textSecondary, // Menggunakan warna sekunder agar beda dengan judul
+  company: {
+    color: COLORS.textSecondary,
     fontSize: 14,
-    marginBottom: 12,
-    fontStyle: 'italic',
+    fontWeight: "500",
   },
-  itemDesc: {
-    color: '#CCC',
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    marginVertical: 12,
+  },
+  description: {
+    color: '#D1D5DB', // Abu-abu terang
     fontSize: 14,
-    lineHeight: 20,
-  }
+    lineHeight: 22, // Keterbacaan lebih baik
+  },
 });

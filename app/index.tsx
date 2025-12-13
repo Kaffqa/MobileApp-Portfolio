@@ -82,6 +82,11 @@ export default function Home() {
             <View style={styles.row}>
                 <Button title="Projects" primary onPress={() => router.push("/Projects" as any)} style={{ flex: 1 }} />
                 <Button title="Contact" onPress={() => router.push("/contact" as any)} style={{ flex: 1 }} />
+                <Button 
+        title="Services" 
+        onPress={() => router.push("/Services" as any)} 
+        style={{ flex: 1 }} 
+      />
             </View>
             <Button title="View My Journey" icon="time-outline" onPress={() => router.push("/journey" as any)} style={styles.btnGhost} />
           </View>
